@@ -1,0 +1,225 @@
+name: Deploy To Azure
+on:
+  workflow_dispatch:
+    inputs:
+      prefix:
+          description: 'Resource Group prefix'
+          required: true
+          default: 'sasviya'
+      location:
+          description: 'Deployment region'
+          required: true
+          default: 'eastus'
+      public_cidr:
+          description: 'Public IP range to whitelist for access to cluser. Ex: "76.31.125.243/32","76.31.125.222/32" '
+          required: true
+          default: '"76.31.125.243/32"'
+      tags:
+          description: 'e.g., { "key1" = "value1", "key2" = "value2" }'
+          required: false
+          default: '{}'
+      # create_postgres:
+      #     description: 'Create Azure Postgres. Set this to "false" when using internal Crunchy Postgres'
+      #     required: false
+      #     default: 'false'
+      # postgres_ssl_enforcement_enabled:
+      #     description: 'Enfore SSL'
+      #     required: false
+      #     default: 'true'
+      # create_container_registry:
+      #     description: 'Create Container Registry'
+      #     required: false
+      #     default: 'true'
+      # container_registry_sku:
+      #     description: 'Premium or Standard'
+      #     required: false
+      #     default: 'Standard'
+      # container_registry_admin_enabled:
+      #     description: 'Enable Admin account on Container Registry'
+      #     required: false
+      #     default: 'false'
+      # container_registry_geo_replica_locs:
+      #     description: 'Replication region'
+      #     required: false
+      #     default: ''
+      # node_pools:
+      #     description: 'Define Node Pool Settings'
+      #     required: false
+      #     default: 'node_pools = {
+      #                 cas = {
+      #                   "machine_type"          = "Standard_E16s_v3"
+      #                   "os_disk_size"          = 200
+      #                   "min_nodes"             = 2
+      #                   "max_nodes"             = 3
+      #                   "max_pods"              = 110
+      #                   "node_taints"           = ["workload.sas.com/class=cas:NoSchedule"]
+      #                   "node_labels" = {
+      #                     "workload.sas.com/class" = "cas"
+      #                   }
+      #                 },
+      #                 compute = {
+      #                   "machine_type"          = "Standard_E16s_v3"
+      #                   "os_disk_size"          = 200
+      #                   "min_nodes"             = 2
+      #                   "max_nodes"             = 3
+      #                   "max_pods"              = 110
+      #                   "node_taints"           = ["workload.sas.com/class=compute:NoSchedule"]
+      #                   "node_labels" = {
+      #                     "workload.sas.com/class"        = "compute"
+      #                     "launcher.sas.com/prepullImage" = "sas-programming-environment"
+      #                   }
+      #                 },
+      #                 connect = {
+      #                   "machine_type"          = "Standard_E16s_v3"
+      #                   "os_disk_size"          = 200
+      #                   "min_nodes"             = 2
+      #                   "max_nodes"             = 3
+      #                   "max_pods"              = 110
+      #                   "node_taints"           = ["workload.sas.com/class=connect:NoSchedule"]
+      #                   "node_labels" = {
+      #                     "workload.sas.com/class"        = "connect"
+      #                     "launcher.sas.com/prepullImage" = "sas-programming-environment"
+      #                   }
+      #                 },
+      #                 stateless = {
+      #                   "machine_type"          = "Standard_D16s_v3"
+      #                   "os_disk_size"          = 200
+      #                   "min_nodes"             = 2
+      #                   "max_nodes"             = 3
+      #                   "max_pods"              = 110
+      #                   "node_taints"           = ["workload.sas.com/class=stateless:NoSchedule"]
+      #                   "node_labels" = {
+      #                     "workload.sas.com/class" = "stateless"
+      #                   }
+      #                 },
+      #                 stateful = {
+      #                   "machine_type"          = "Standard_D8s_v3"
+      #                   "os_disk_size"          = 200
+      #                   "min_nodes"             = 2
+      #                   "max_nodes"             = 3
+      #                   "max_pods"              = 110
+      #                   "node_taints"           = ["workload.sas.com/class=stateful:NoSchedule"]
+      #                   "node_labels" = {
+      #                     "workload.sas.com/class" = "stateful"
+      #                   }
+      #                 }
+      #               }'
+      # create_jump_public_ip:
+      #     description: 'Create Public IP for Jump Box'
+      #     required: false
+      #     default: 'false'
+      # jump_vm_admin:
+      #     description: 'Username for admin account'
+      #     required: false
+      #     default: 'jumpuser'
+      # storage_type :
+      #     description: 'standard or ha'
+      #     required: false
+      #     default: 'ha'
+      # create_nfs_public_ip :
+      #     description: 'Required ONLY when storage_type is "standard" to create NFS Server VM'
+      #     required: false
+      #     default: 'false'
+      # nfs_vm_admin :
+      #     description: 'Required ONLY when storage_type is "standard" to create NFS Server VM'
+      #     required: false
+      #     default: 'nfsuser'
+      # nfs_vm_zone :
+      #     description: 'Required ONLY when storage_type is "standard" to create NFS Server VM'
+      #     required: false
+      #     default: '1'
+      # nfs_raid_disk_size :
+      #     description: 'Required ONLY when storage_type is "standard" to create NFS Server VM'
+      #     required: false
+      #     default: '128'
+      # nfs_raid_disk_type :
+      #     description: 'Required ONLY when storage_type is "standard" to create NFS Server VM'
+      #     required: false
+      #     default: 'Standard_LRS'
+      # nfs_raid_disk_zones :
+      #     description: 'Required ONLY when storage_type is "standard" to create NFS Server VM'
+      #     required: false
+      #     default: '["1"]'
+      # netapp_service_level :
+      #     description: 'Required ONLY when storage_type is "ha" to create ANF instance'
+      #     required: false
+      #     default: 'Premium'
+      # netapp_size_in_tb :
+      #     description: 'Required ONLY when storage_type is "ha" to create ANF instance'
+      #     required: false
+      #     default: '4'
+      create_aks_azure_monitor :
+          description: 'Enable Azure Monitor for AKS instance'
+          required: false
+          default: 'false'
+jobs:
+  deploy-to-azure:
+    name: 'Deploy to Azure'
+    env:
+      TF_VAR_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      TF_VAR_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      TF_VAR_prefix: ${{ github.event.inputs.prefix }}
+      TF_VAR_location: ${{ github.event.inputs.location }}
+      TF_VAR_tags: ${{ github.event.inputs.tags }}
+      # TF_VAR_create_postgres: ${{ github.event.inputs.create_postgres }}
+      # TF_VAR_postgres_ssl_enforcement_enabled: ${{ github.event.inputs.postgres_ssl_enforcement_enabled }}
+      # TF_VAR_create_container_registry: ${{ github.event.inputs.create_container_registry }}
+      # TF_VAR_container_registry_sku: ${{ github.event.inputs.container_registry_sku }}
+      # TF_VAR_container_registry_admin_enabled: ${{ github.event.inputs.container_registry_admin_enabled }}
+      # TF_VAR_container_registry_geo_replica_locs: ${{ github.event.inputs.container_registry_geo_replica_locs }}
+      # TF_VAR_kubernetes_version: ${{ github.event.inputs.kubernetes_version }}
+      # TF_VAR_default_nodepool_min_nodes: ${{ github.event.inputs.default_nodepool_min_nodes }}
+      # TF_VAR_default_nodepool_vm_type: ${{ github.event.inputs.default_nodepool_vm_type }}
+      # TF_VAR_node_pools: ${{ github.event.inputs.node_pools }}
+      # TF_VAR_create_jump_public_ip: ${{ github.event.inputs.create_jump_public_ip }}
+      # TF_VAR_jump_vm_admin: ${{ github.event.inputs.jump_vm_admin }}
+      # TF_VAR_storage_type: ${{ github.event.inputs.storage_type }}
+      # TF_VAR_create_nfs_public_ip: ${{ github.event.inputs.create_nfs_public_ip }}
+      # TF_VAR_nfs_vm_admin: ${{ github.event.inputs.nfs_vm_admin }}
+      # TF_VAR_nfs_vm_zone: ${{ github.event.inputs.nfs_vm_zone }}
+      # TF_VAR_nfs_raid_disk_size: ${{ github.event.inputs.nfs_raid_disk_size }}
+      # TF_VAR_nfs_raid_disk_type: ${{ github.event.inputs.nfs_raid_disk_type }}
+      # TF_VAR_nfs_raid_disk_zones: ${{ github.event.inputs.nfs_raid_disk_zones }}
+      # TF_VAR_netapp_service_level: ${{ github.event.inputs.netapp_service_level }}
+      # TF_VAR_netapp_size_in_tb: ${{ github.event.inputs.netapp_size_in_tb }}
+      TF_VAR_create_aks_azure_monitor: ${{ github.event.inputs.create_aks_azure_monitor }}
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Public IP
+        id: ip
+        uses: haythem/public-ip@v1.2
+
+      - name: Set ENV Variable for CIDRS
+        run: |
+            echo 'TF_VAR_default_public_access_cidrs=[${{ github.event.inputs.public_cidr }}, "${{ steps.ip.outputs.ipv4 }}/32"]' >> $GITHUB_ENV
+
+      - name: 'Create SSH Public Key'
+        run: |
+            mkdir -p ~/.ssh
+            echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
+            chmod 600 ~/.ssh/id_rsa.pub
+
+      - name: 'Checkout'
+        uses: actions/checkout@main
+
+      - name: 'Set Terraform Version'
+        uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: 0.14.8
+          terraform_wrapper: false
+
+      - name: 'Create SSH Public Key'
+        run: |
+            mkdir -p ~/.ssh
+            echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
+            chmod 600 ~/.ssh/id_rsa.pub
+
+      - name: 'Terraform Init'
+        id: init
+        run: terraform init
+
+      - name: 'Terraform Apply'
+        id: apply
+        run: terraform apply -input=false -auto-approve
