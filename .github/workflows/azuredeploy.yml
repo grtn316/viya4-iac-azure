@@ -207,7 +207,7 @@ jobs:
       - name: 'Set Terraform Version'
         uses: hashicorp/setup-terraform@v1.2.1
         with:
-          terraform_version: 0.14.8
+          #terraform_version: 0.14.8
           terraform_wrapper: false
 
       - name: 'Create SSH Public Key'
