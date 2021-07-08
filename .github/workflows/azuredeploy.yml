@@ -222,4 +222,4 @@ jobs:
 
       - name: 'Terraform Apply'
         id: apply
-        run: terraform apply -input=false -auto-approve
+        run: terraform apply -input=false -auto-approve -var-file="./examples/sample-input-ha.tfvars"
